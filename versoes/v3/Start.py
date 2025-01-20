@@ -1,17 +1,10 @@
 import cv2
 import time
-from GestosMenu import GestosMenu  
-from GestosJogo import GestosJogo  
-import Option1  
-import Option2  
-import Option3  
-import Option4  
+from GestosMenu import GestosMenu  # Importa a classe GestosMenu
 
 class Start:
     def __init__(self):
         self.gestos_menu = GestosMenu()  # Cria uma instância de GestosMenu
-        self.gestos_jogo = GestosJogo()  # Cria uma instância de GestosJogo
-        self.gamemode = 0  # Inicializa gamemode como 0 (Menu)
         self.last_menu_switch_time = time.time()  # Hora da última mudança de menu
         self.ignore_time = 2  # Ignora a detecção de mãos por 2 segundos após a troca de menus
         self.menu = 1  # Variável que controla qual menu está sendo exibido
@@ -28,11 +21,7 @@ class Start:
             h, w, _ = frame.shape
 
             # Detecta as mãos e gestos
-            if self.gamemode == 0:  # Usando GestosMenu
-                results = self.gestos_menu.hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-            else:  # Usando GestosJogo
-                results = self.gestos_jogo.hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-
+            results = self.gestos_menu.hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             hands_landmarks = results.multi_hand_landmarks if results.multi_hand_landmarks else None
 
             left_fingers = 0
@@ -44,13 +33,8 @@ class Start:
                 for hand_landmarks, hand_handedness in zip(hands_landmarks, results.multi_handedness):
                     hand_type = hand_handedness.classification[0].label
 
-                    # Ensure identify_fingers_raised is only called in GestosMenu (when gamemode == 0)
-                    if self.gamemode == 0:
-                        is_ok = self.gestos_menu.gesture_library.detect_ok_gesture(hand_landmarks)
-                        fingers_raised = self.gestos_menu.gesture_library.identify_fingers_raised(hand_landmarks, hand_type)
-                    else:
-                        is_ok = self.gestos_jogo.gesture_library.detect_ok_gesture(hand_landmarks)
-                        fingers_raised = 0  # Default value, not used in GestosJogo
+                    is_ok = self.gestos_menu.gesture_library.detect_ok_gesture(hand_landmarks)
+                    fingers_raised = self.gestos_menu.gesture_library.identify_fingers_raised(hand_landmarks, hand_type)
 
                     if hand_type == "Left":
                         left_fingers = fingers_raised
@@ -59,7 +43,7 @@ class Start:
                         right_fingers = fingers_raised
                         right_ok = is_ok
 
-                    (self.gestos_menu if self.gamemode == 0 else self.gestos_jogo).mp_draw.draw_landmarks(frame, hand_landmarks, (self.gestos_menu if self.gamemode == 0 else self.gestos_jogo).mp_hands.HAND_CONNECTIONS)
+                    self.gestos_menu.mp_draw.draw_landmarks(frame, hand_landmarks, self.gestos_menu.mp_hands.HAND_CONNECTIONS)
 
             # Exibe o título do Menu 1
             if self.menu == 1:
@@ -78,7 +62,7 @@ class Start:
 
             # Lógica de transição entre Menu 1 e Menu 2 (usando OK com ambas as mãos)
             if self.menu == 1:
-                if left_ok and right_ok:  # Se ambas as mãos fizerem OK, passa para Menu 2
+                if left_ok and right_ok:  # Se ambas as mãos fizerem OK, transita para Menu 2
                     print("Transitioning to Menu 2")
                     self.menu = 2
                     self.last_menu_switch_time = time.time()
@@ -98,31 +82,20 @@ class Start:
                 if current_time - self.last_menu_switch_time > self.ignore_time:
                     if left_fingers == 1 and right_ok:
                         print("Option 1 selected: Teste")
-                        self.menu = Option1.run(cap)  # Chama o método run de Option1 e define o menu após a execução
-                        self.gamemode = 1  
+                        self.last_menu_switch_time = current_time
+                    elif left_fingers == 2 and right_ok:
+                        print("Option 2 selected: Objetos")
                         self.last_menu_switch_time = current_time
                     elif left_fingers == 3 and right_ok:
                         print("Option 3 selected: Singleplayer")
-                        Option3.run(cap)
-                        self.gamemode = 1  
-                        self.menu = 1
                         self.last_menu_switch_time = current_time
                     elif left_fingers == 4 and right_ok:
                         print("Option 4 selected: Multiplayer")
-                        Option4.run(cap)
-                        self.gamemode = 1  
-                        self.menu = 1
                         self.last_menu_switch_time = current_time
                     elif left_fingers == 5 and right_ok:
                         print("Option 5 selected: Returning to Menu 1")
                         self.menu = 1  # Retorna para o Menu 1
                         self.last_menu_switch_time = current_time
-
-            # Se no gamemode, verifica se as mãos estão fazendo OK
-            if self.gamemode == 1 and left_ok and right_ok:
-                print("Switching back to Menu")
-                self.gamemode = 0
-                self.menu = 1  
 
             # Exibe o frame
             cv2.imshow('Gesture Detection', frame)
