@@ -3,13 +3,6 @@ import mediapipe as mp
 from gesture_library import GestureLibrary
 
 def main():
-    """
-    Função principal que inicializa o reconhecimento de gestos e captura de vídeo.
-    Entrada:
-        Nenhuma
-    Saída:
-        Nenhuma
-    """
     # Inicializa MediaPipe Hands e a biblioteca de gestos
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5)
@@ -78,9 +71,9 @@ def main():
 
         # Exibe os gestos e trata interações
         if left_fingers:
-            cv2.putText(frame, f"Mão Esquerda: {left_fingers}", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            cv2.putText(frame, f"Mao Esquerda: {left_fingers}", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         if right_fingers:
-            cv2.putText(frame, f"Mão Direita: {right_fingers}", (w - 300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            cv2.putText(frame, f"Mao Direita: {right_fingers}", (w - 300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         if left_ok:
             cv2.putText(frame, "OK Esquerda", (10, h - 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
